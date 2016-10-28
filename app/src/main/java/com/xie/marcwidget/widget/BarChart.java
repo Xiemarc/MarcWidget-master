@@ -132,7 +132,7 @@ public class BarChart extends View {
 
     BarAnimation anim;//动画
     private int TIME = 1000;//动画持续时间
-    private float mBarTop;//每个柱形图的高度，为了使用动画效果
+    private float[] aniProgress;//做动画需要的集合类
 
     public void setOnItemBarClickListener(OnItemBarClickListener onRangeBarClickListener) {
         this.mOnItemBarClickListener = onRangeBarClickListener;
@@ -221,8 +221,14 @@ public class BarChart extends View {
                 getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));
     }
 
+    /**
+     * 设置data的时候对 数值的x、y集合以及做动画的集合初始化
+     *
+     * @param list
+     */
     public void setData(List<ChartEntity> list) {
         this.mData = list;
+        aniProgress = new float[mData.size()];
         data_draw_y = new int[mData.size()];
         data_draw_x = new int[mData.size()];
         //计算最大值
@@ -234,7 +240,7 @@ public class BarChart extends View {
         }
         getRange(maxValueInItems);
         //重新绘图
-        invalidate();
+//        invalidate();
         this.startAnimation(anim);
     }
 
@@ -301,8 +307,10 @@ public class BarChart extends View {
         mBarRect.bottom = mTotalHeight - topMargin / 2;
         for (int i = 0; i < mData.size(); i++) {
 //            mBarTop = (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems));
+            int value = (int) aniProgress[i];
             mBarRect.left = (int) (xStartIndex + barWidth * i + barSpace * (i + 1) - leftMoving);
-            mBarRect.top = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems));
+//            mBarRect.top = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems));
+            mBarRect.top = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (value / maxValueInItems));
             mBarRect.right = mBarRect.left + barWidth;
             mBarLeftXPoints.add((int) mBarRect.left);
             mBarRightXPoints.add((int) mBarRect.right);
@@ -451,7 +459,7 @@ public class BarChart extends View {
         float distance = 0;
         for (int i = 0; i < mData.size(); i++) {
             distance = xStartIndex + barWidth * i + barSpace * (i + 1) - leftMoving;//总的长度
-            String text = String.valueOf(mData.get(i).getxLabel());
+            String text = String.valueOf(aniProgress[i]);
             //在可见范围内才绘制,然后把表标值放进去data_draw_x和data_draw_y中
             data_draw_x[i] = (int) (mBarLeftXPoints.get(i) - (textPaint.measureText(text) - barWidth) / 2);
             data_draw_y[i] = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems))
@@ -662,16 +670,14 @@ public class BarChart extends View {
             super.applyTransformation(interpolatedTime, t);
             if (interpolatedTime < 1.0f) {
                 for (int i = 0; i < mData.size(); i++) {
-                    mBarTop = (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems)) * interpolatedTime;
+                    aniProgress[i] = mData.get(i).getyValue() * interpolatedTime;
                 }
-                postInvalidate();
             } else {
                 for (int i = 0; i < mData.size(); i++) {
-                    mBarTop = (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems));
-                    postInvalidate();
+                    aniProgress[i] = mData.get(i).getyValue();
                 }
             }
-
+            postInvalidate();
         }
     }
 }

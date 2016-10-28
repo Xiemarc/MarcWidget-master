@@ -3,7 +3,7 @@ package com.xie.marcwidget.widget;
 import android.content.Context;
 import android.widget.TextView;
 
-import com.chs.easychartwidget.R;
+import com.xie.marcwidget.R;
 import com.xie.marcwidget.entity.ChartEntity;
 import com.xie.marcwidget.utils.DensityUtil;
 

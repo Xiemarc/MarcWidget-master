@@ -5,9 +5,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.chs.easychartwidget.R;
 import com.xie.marcwidget.activity.BarChartActivity;
 import com.xie.marcwidget.activity.HollowPieChartActivity;
+import com.xie.marcwidget.activity.HoriBarActivity;
 import com.xie.marcwidget.activity.LineChartActivity;
 import com.xie.marcwidget.activity.PieChartActivity;
 import com.xie.marcwidget.activity.ScaleActivity;
@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.btn_path).setOnClickListener(this);
         findViewById(R.id.btn_path_pie).setOnClickListener(this);
         findViewById(R.id.btn_scale).setOnClickListener(this);
+        findViewById(R.id.btn_hori_bar).setOnClickListener(this);
     }
 
     @Override
@@ -52,6 +53,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_scale:
                 intent = new Intent(this, ScaleActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.btn_hori_bar:
+                intent = new Intent(this,HoriBarActivity.class);
                 startActivity(intent);
                 break;
         }

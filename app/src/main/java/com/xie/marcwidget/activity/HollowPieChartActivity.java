@@ -5,7 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.chs.easychartwidget.R;
+import com.xie.marcwidget.R;
 import com.xie.marcwidget.entity.PieDataEntity;
 import com.xie.marcwidget.widget.HollowPieChart;
 

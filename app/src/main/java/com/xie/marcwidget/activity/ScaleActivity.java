@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
-import com.chs.easychartwidget.R;
+import com.xie.marcwidget.R;
 import com.xie.marcwidget.widget.ScaleView;
 
 /**

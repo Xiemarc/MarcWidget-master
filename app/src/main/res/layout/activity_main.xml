@@ -39,4 +39,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="直线比例"/>
+    <Button
+        android:id="@+id/btn_hori_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="横向柱形图"/>
 </LinearLayout>

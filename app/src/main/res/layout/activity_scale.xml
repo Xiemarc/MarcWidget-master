@@ -5,7 +5,7 @@
               android:gravity="center"
               android:orientation="vertical">
 
-    <com.chs.easychartwidget.widget.ScaleView
+    <com.xie.marcwidget.widget.ScaleView
         android:id="@+id/scale_view"
         android:layout_width="match_parent"
         android:layout_marginLeft="20dp"

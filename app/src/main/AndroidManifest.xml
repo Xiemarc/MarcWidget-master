@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.chs.easychartwidget">
+          package="com.xie.marcwidget">
 
     <application
         android:allowBackup="true"
@@ -20,6 +20,7 @@
         <activity android:name=".activity.PieChartActivity"/>
         <activity android:name=".activity.HollowPieChartActivity"/>
         <activity android:name=".activity.ScaleActivity"/>
+        <activity android:name=".activity.HoriBarActivity"/>
     </application>
 
 </manifest>

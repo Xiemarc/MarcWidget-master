@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
-import com.chs.easychartwidget.R;
+import com.xie.marcwidget.R;
 import com.xie.marcwidget.entity.ChartEntity;
 import com.xie.marcwidget.widget.BarChart;
 import com.xie.marcwidget.widget.MyMarkerView;
