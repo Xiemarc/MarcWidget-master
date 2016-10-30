@@ -13,6 +13,7 @@ import com.xie.marcwidget.widget.MyMarkerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * author: marc
@@ -23,6 +24,7 @@ public class BarChartActivity extends AppCompatActivity {
 
     private BarChart barChart;
     private List<ChartEntity> data;
+    private Random random;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -30,14 +32,16 @@ public class BarChartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_bar_chart);
         barChart = (BarChart) findViewById(R.id.chart);
 
+        random = new Random();
         data = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
-            data.add(new ChartEntity(String.valueOf(i), (float) (Math.random() * 1000)));
+            data.add(new ChartEntity(String.valueOf(i), (float) (random.nextInt(100))));
         }
         barChart.setData(data);
-        MyMarkerView markerView  = new MyMarkerView(BarChartActivity.this,R.layout.custom_marker_view);
+        MyMarkerView markerView = new MyMarkerView(BarChartActivity.this, R.layout.custom_marker_view);
         barChart.setMarkerView(markerView);
-//        barChart.startCustomAnimation();
+        barChart.setIsDrawMarkerView(true);
+        barChart.setmDrawTopValues(true);
         barChart.setOnItemBarClickListener(new BarChart.OnItemBarClickListener() {
             @Override
             public void onClick(int position) {
@@ -49,8 +53,8 @@ public class BarChartActivity extends AppCompatActivity {
 
     public void changeData(View v) {
         data.clear();
-        for (int i = 0; i < 5; i++) {
-            data.add(new ChartEntity(String.valueOf(i), (float) (Math.random() * 150)));
+        for (int i = 0; i < 10; i++) {
+            data.add(new ChartEntity(String.valueOf(i), (float) (random.nextInt(100))));
         }
         barChart.setData(data);
 //        barChart.startCustomAnimation();

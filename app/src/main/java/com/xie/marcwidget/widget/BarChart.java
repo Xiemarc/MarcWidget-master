@@ -113,9 +113,15 @@ public class BarChart extends View {
     protected MarkerView mMarkerView;
 
     /**
-     * 是否话markerview
+     * 是否话markerview，默认绘制
      */
     protected boolean mDrawMarkerViews = true;
+
+
+    /**
+     * 是否绘制图像顶部的数值，默认绘制
+     */
+    private boolean mDrawTopValues = true;
 
     /* 用户点击到了无效位置 */
     public static final int INVALID_POSITION = -1;
@@ -228,6 +234,7 @@ public class BarChart extends View {
      */
     public void setData(List<ChartEntity> list) {
         this.mData = list;
+        isDrawBorder = false;
         aniProgress = new float[mData.size()];
         data_draw_y = new int[mData.size()];
         data_draw_x = new int[mData.size()];
@@ -278,8 +285,9 @@ public class BarChart extends View {
         //画X轴的text
         drawXAxisText(canvas);
         //画柱形图上面的文字
-        drawBarTopText(canvas);
-//        drawMarkerViews(canvas);
+        if (mDrawTopValues) {
+            drawBarTopText(canvas);
+        }
     }
 
 
@@ -289,7 +297,6 @@ public class BarChart extends View {
      * @param position
      */
     private void drawBorder(int position) {
-
         mBarRectClick.left = (int) (xStartIndex + barWidth * position + barSpace * (position + 1) - leftMoving);
         mBarRectClick.right = mBarRectClick.left + barWidth;
         mBarRectClick.bottom = mBarRect.bottom;
@@ -308,12 +315,18 @@ public class BarChart extends View {
         for (int i = 0; i < mData.size(); i++) {
 //            mBarTop = (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems));
             int value = (int) aniProgress[i];
+
             mBarRect.left = (int) (xStartIndex + barWidth * i + barSpace * (i + 1) - leftMoving);
 //            mBarRect.top = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems));
             mBarRect.top = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (value / maxValueInItems));
             mBarRect.right = mBarRect.left + barWidth;
             mBarLeftXPoints.add((int) mBarRect.left);
             mBarRightXPoints.add((int) mBarRect.right);
+
+            data_draw_x[i] = (int) (mBarLeftXPoints.get(i) - (textPaint.measureText(String.format("%s",value)) - barWidth) / 2);
+            data_draw_y[i] = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems))
+                    - DensityUtil.dip2px(getContext(), 10);
+
 //            //在可见的范围内才绘制
 //            if (mBarRect.left > xStartIndex - 100 && mBarRect.right < (mTotalWidth - leftMargin * 2) + 100) {
             canvas.drawRoundRect(mBarRect, 10, 10, barPaint);
@@ -461,15 +474,36 @@ public class BarChart extends View {
             distance = xStartIndex + barWidth * i + barSpace * (i + 1) - leftMoving;//总的长度
             String text = String.valueOf(aniProgress[i]);
             //在可见范围内才绘制,然后把表标值放进去data_draw_x和data_draw_y中
-            data_draw_x[i] = (int) (mBarLeftXPoints.get(i) - (textPaint.measureText(text) - barWidth) / 2);
-            data_draw_y[i] = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems))
-                    - DensityUtil.dip2px(getContext(), 10);
+
             if ((xStartIndex + distance) >= xStartIndex && (xStartIndex + distance) < (mTotalWidth - leftMargin * 2)) {
                 canvas.drawText(text, mBarLeftXPoints.get(i) - (textPaint.measureText(text) - barWidth) / 2
                         , (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems))
                                 - DensityUtil.dip2px(getContext(), 10), valuePaint);
 
             }
+        }
+    }
+
+    /**
+     * 绘制markerview
+     *
+     * @param canvas
+     */
+    private void drawMarkerViews(Canvas canvas) {
+        if (mMarkerView == null || !mDrawMarkerViews) {
+            return;
+        }
+        //这里把所有的markerview都绘制上去
+        for (int i = 0; i < mData.size(); i++) {
+            ChartEntity entry = mData.get(i);
+            mMarkerView.refreshContent(entry);
+            mMarkerView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+            mMarkerView.layout(0, 0, mMarkerView.getMeasuredWidth(),
+                    mMarkerView.getMeasuredHeight());
+            //画markerview
+            //需要解决 显示的时候才绘制
+            mMarkerView.draw(canvas, data_draw_x[i], data_draw_y[i]);
         }
     }
 
@@ -536,28 +570,6 @@ public class BarChart extends View {
         }
     }
 
-    /**
-     * 绘制markerview
-     *
-     * @param canvas
-     */
-    private void drawMarkerViews(Canvas canvas) {
-        if (mMarkerView == null || !mDrawMarkerViews) {
-            return;
-        }
-        //这里把所有的markerview都绘制上去
-        for (int i = 0; i < mData.size(); i++) {
-            ChartEntity entry = mData.get(i);
-            mMarkerView.refreshContent(entry);
-            mMarkerView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
-                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-            mMarkerView.layout(0, 0, mMarkerView.getMeasuredWidth(),
-                    mMarkerView.getMeasuredHeight());
-            //画markerview
-            //需要解决 显示的时候才绘制
-            mMarkerView.draw(canvas, data_draw_x[i], data_draw_y[i]);
-        }
-    }
 
     /**
      * 画markerview
@@ -569,12 +581,26 @@ public class BarChart extends View {
     }
 
     /**
+     * 设置是否话markerview
+     *
+     * @return
+     */
+    public void setIsDrawMarkerView(boolean isDrawMarker) {
+        this.mDrawMarkerViews = isDrawMarker;
+    }
+
+    /**
      * 返回markerview
      *
      * @return
      */
     public MarkerView getMarkerView() {
         return mMarkerView;
+    }
+
+
+    public void setmDrawTopValues(boolean mDrawTopValues) {
+        this.mDrawTopValues = mDrawTopValues;
     }
 
     /**

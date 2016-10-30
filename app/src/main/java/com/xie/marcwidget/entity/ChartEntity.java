@@ -7,7 +7,7 @@ package com.xie.marcwidget.entity;
  */
 public class ChartEntity {
     private String xLabel;
-    private Float yValue;
+    private float yValue;
 
     public ChartEntity(String xLabel, Float yValue) {
         this.xLabel = xLabel;
@@ -26,7 +26,7 @@ public class ChartEntity {
         this.yValue = yValue;
     }
 
-    public Float getyValue() {
+    public float getyValue() {
         return yValue;
     }
 
