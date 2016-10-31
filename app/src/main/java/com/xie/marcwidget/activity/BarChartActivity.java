@@ -35,7 +35,8 @@ public class BarChartActivity extends AppCompatActivity {
         random = new Random();
         data = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
-            data.add(new ChartEntity(String.valueOf(i), (float) (random.nextInt(100))));
+            ChartEntity chartEntity = new ChartEntity(String.format("%s", i), (float) random.nextInt(100));
+            data.add(chartEntity);
         }
         barChart.setData(data);
         MyMarkerView markerView = new MyMarkerView(BarChartActivity.this, R.layout.custom_marker_view);

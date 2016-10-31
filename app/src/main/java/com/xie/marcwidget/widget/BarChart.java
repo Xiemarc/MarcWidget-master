@@ -323,7 +323,7 @@ public class BarChart extends View {
             mBarLeftXPoints.add((int) mBarRect.left);
             mBarRightXPoints.add((int) mBarRect.right);
 
-            data_draw_x[i] = (int) (mBarLeftXPoints.get(i) - (textPaint.measureText(String.format("%s",value)) - barWidth) / 2);
+            data_draw_x[i] = (int) (mBarLeftXPoints.get(i) - (textPaint.measureText(String.format("%s", value)) - barWidth) / 2);
             data_draw_y[i] = (int) maxHeight + topMargin * 2 - (int) (maxHeight * (mData.get(i).getyValue() / maxValueInItems))
                     - DensityUtil.dip2px(getContext(), 10);
 
@@ -336,7 +336,7 @@ public class BarChart extends View {
         if (isDrawBorder) {
             drawBorder(mClickPosition);
             canvas.drawRoundRect(mBarRectClick, 10, 10, borderPaint);
-            drawMarkerViews(canvas);
+            drawMarkerViews(canvas, mClickPosition);
         }
     }
 
@@ -488,22 +488,25 @@ public class BarChart extends View {
      * 绘制markerview
      *
      * @param canvas
+     * @param mClickPosition
      */
-    private void drawMarkerViews(Canvas canvas) {
+    private void drawMarkerViews(Canvas canvas, int mClickPosition) {
         if (mMarkerView == null || !mDrawMarkerViews) {
             return;
         }
         //这里把所有的markerview都绘制上去
         for (int i = 0; i < mData.size(); i++) {
-            ChartEntity entry = mData.get(i);
-            mMarkerView.refreshContent(entry);
-            mMarkerView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
-                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-            mMarkerView.layout(0, 0, mMarkerView.getMeasuredWidth(),
-                    mMarkerView.getMeasuredHeight());
-            //画markerview
-            //需要解决 显示的时候才绘制
-            mMarkerView.draw(canvas, data_draw_x[i], data_draw_y[i]);
+            if (i == mClickPosition) {
+                ChartEntity entry = mData.get(i);
+                mMarkerView.refreshContent(entry);
+                mMarkerView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+                mMarkerView.layout(0, 0, mMarkerView.getMeasuredWidth(),
+                        mMarkerView.getMeasuredHeight());
+                //画markerview
+                //需要解决 显示的时候才绘制
+                mMarkerView.draw(canvas, data_draw_x[i], data_draw_y[i]);
+            }
         }
     }
 

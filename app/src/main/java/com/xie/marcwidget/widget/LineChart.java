@@ -5,9 +5,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -50,7 +52,13 @@ public class LineChart extends View {
     /**
      * 画笔 背景，轴 ，线 ，text ,点
      */
-    private Paint bgPaint,axisPaint, linePaint, textPaint, pointPaint;
+    private Paint bgPaint, axisPaint, linePaint, textPaint, pointPaint;
+
+    /**
+     * 点击的显示圆圈的画笔
+     */
+    private Paint bigCirclePaint;
+    private Paint smallCirclePaint;
     /**
      * 原点的半径
      */
@@ -90,6 +98,11 @@ public class LineChart extends View {
      * 保存点的x坐标
      */
     private List<Integer> linePoints = new ArrayList<>();
+
+    /**
+     * 保存点的Y坐标
+     */
+    private List<Integer> linePointy = new ArrayList<>();
     /**
      * 左后一次的x坐标
      */
@@ -98,6 +111,39 @@ public class LineChart extends View {
      * 当前移动的距离
      */
     private float movingThisTime = 0.0f;
+
+    /* 用户点击到了无效位置 */
+    public static final int INVALID_POSITION = -1;
+    private OnItemLineClickListener mOnItemLineClickListener;
+    private GestureDetector mGestureListener;
+    /**
+     * 是否绘制点击效果
+     */
+    private boolean isDrawBorder;
+    /**
+     * 点击的地方
+     */
+    private int mClickPosition;
+    protected MarkerView mMarkerView;
+    /**
+     * 是否话markerview，默认绘制
+     */
+    protected boolean mDrawMarkerViews = true;
+
+    /**
+     * 是否是平滑的曲线
+     */
+    private boolean isSmooth;
+
+    public void setOnItemLineClickListener(OnItemLineClickListener onRangeBarClickListener) {
+        this.mOnItemLineClickListener = onRangeBarClickListener;
+    }
+
+    public interface OnItemLineClickListener {
+        void onClick(int position);
+    }
+
+
     public LineChart(Context context) {
         super(context);
         init(context);
@@ -115,6 +161,7 @@ public class LineChart extends View {
 
     private void init(Context context) {
         setWillNotDraw(false);
+        mGestureListener = new GestureDetector(context, new RangeBarOnGestureListener());
         mContext = context;
         leftMargin = DensityUtil.dip2px(context, 16);
         topMargin = DensityUtil.dip2px(context, 30);
@@ -134,12 +181,20 @@ public class LineChart extends View {
         linePaint.setStrokeWidth(DensityUtil.dip2px(context, 1));
         linePaint.setColor(Color.BLUE);
         linePaint.setStyle(Paint.Style.STROKE);
+        linePaint.setStrokeJoin(Paint.Join.ROUND);
 
         pointPaint = new Paint();
         pointPaint.setAntiAlias(true);
         pointPaint.setStyle(Paint.Style.FILL);
 
         linePath = new Path();
+
+        bigCirclePaint = new Paint();//点击显示大圆的图
+        bigCirclePaint.setAntiAlias(true);
+        bigCirclePaint.setStyle(Paint.Style.FILL);
+        smallCirclePaint = new Paint();
+        smallCirclePaint.setAntiAlias(true);
+        smallCirclePaint.setStyle(Paint.Style.FILL);
     }
 
     @Override
@@ -162,7 +217,6 @@ public class LineChart extends View {
         paintBottom = mTotalHeight - topMargin / 2;
         maxHeight = paintBottom - paintTop;
         yStartIndex = mTotalHeight - topMargin / 2;
-        ;
     }
 
     @Override
@@ -179,7 +233,7 @@ public class LineChart extends View {
         if (mData == null) return;
         //得到每个bar的宽度
         getItemsWidth();
-       //重置线
+        //重置线
         linePath.reset();
         linePath.incReserve(mData.size());
         checkTheLeftMoving();
@@ -206,20 +260,20 @@ public class LineChart extends View {
         //画左边的Y轴text
         drawLeftYAxis(canvas);
         //画X轴 下面的和上面
-        canvas.drawLine(xStartIndex, yStartIndex, mTotalWidth - leftMargin*2, yStartIndex, axisPaint);
-        canvas.drawLine(xStartIndex, topMargin / 2, mTotalWidth - leftMargin*2, topMargin / 2, axisPaint);
+        canvas.drawLine(xStartIndex, yStartIndex, mTotalWidth - leftMargin * 2, yStartIndex, axisPaint);
+        canvas.drawLine(xStartIndex, topMargin / 2, mTotalWidth - leftMargin * 2, topMargin / 2, axisPaint);
         //画X轴的text
         drawXAxisText(canvas);
     }
 
     private void drawXAxisText(Canvas canvas) {
         float distance = 0;
-        for(int i = 0;i<mData.size();i++){
-            distance = space*i- leftMoving;
+        for (int i = 0; i < mData.size(); i++) {
+            distance = space * i - leftMoving;
             String text = mData.get(i).getxLabel();
             //当在可见的范围内才绘制
-            if((xStartIndex+distance)>=xStartIndex&&(xStartIndex+distance)<(mTotalWidth-leftMargin*2)){
-                canvas.drawText(text, xStartIndex+distance-textPaint.measureText(text)/2, paintBottom + DensityUtil.dip2px(getContext(), 10), textPaint);
+            if ((xStartIndex + distance) >= xStartIndex && (xStartIndex + distance) < (mTotalWidth - leftMargin * 2)) {
+                canvas.drawText(text, xStartIndex + distance - textPaint.measureText(text) / 2, paintBottom + DensityUtil.dip2px(getContext(), 10), textPaint);
             }
         }
     }
@@ -232,7 +286,7 @@ public class LineChart extends View {
             if (startY < topMargin / 2) {
                 break;
             }
-            canvas.drawLine(xStartIndex, startY, mTotalWidth - leftMargin*2, startY, axisPaint);
+            canvas.drawLine(xStartIndex, startY, mTotalWidth - leftMargin * 2, startY, axisPaint);
         }
         axisPaint.setColor(Color.BLACK);
     }
@@ -242,34 +296,85 @@ public class LineChart extends View {
      */
     private void drawLines(Canvas canvas) {
         float distance = 0;
-        for(int i = 0;i<mData.size();i++){
-            distance = space*i- leftMoving;
-            linePoints.add((int) (xStartIndex+distance));
-            float lineHeight = mData.get(i).getyValue() * maxHeight / maxDivisionValue;
+        float prePointX = 0;//上一个点的x坐标
+        float prePointY = 0;//上一个点的y坐标
+        List<Point> listPoint = new ArrayList<>();
+        //先计算各个点的坐标
+        for (int i = 0; i < mData.size(); i++) {
+            distance = space * i - leftMoving;
+            linePoints.add((int) (xStartIndex + distance));
+            float lineHeight = mData.get(i).getyValue() * maxHeight / maxDivisionValue;//y点的坐标
             if (i == 0) {
+                //首先移动到第一个点
                 linePath.moveTo(xStartIndex + distance, paintBottom - lineHeight);
             } else {
-                linePath.lineTo(xStartIndex + distance, paintBottom - lineHeight);
+                Point point = new Point((int) (xStartIndex + distance), (int) (paintBottom - lineHeight));
+                listPoint.add(point);
+                if (isSmooth) {
+                    linePath.quadTo(linePoints.get(i - 1), linePointy.get(i - 1)
+                            , linePoints.get(i), linePointy.get(i));
+                } else {
+                    linePath.lineTo(xStartIndex + distance, paintBottom - lineHeight);
+                }
             }
         }
         canvas.drawPath(linePath, linePaint);
     }
+
     /**
      * 画线上的点
      */
     private void drawCircles(Canvas canvas) {
         for (int i = 0; i < mData.size(); i++) {
-                pointPaint.setColor(Color.parseColor("#EF6868"));
+            pointPaint.setColor(Color.parseColor("#6FCCEE"));
+            //把点的坐标y轴放进集合中
+            linePointy.add((int) (paintBottom - mData.get(i).getyValue() * maxHeight / maxDivisionValue));
             //只有在可见的范围内才绘制
-            if(linePoints.get(i)>=xStartIndex&&linePoints.get(i)<(mTotalWidth-leftMargin*2)){
+            if (linePoints.get(i) >= xStartIndex && linePoints.get(i) < (mTotalWidth - leftMargin * 2)) {
                 canvas.drawCircle(linePoints.get(i), paintBottom - mData.get(i).getyValue() * maxHeight / maxDivisionValue, RADIUS, pointPaint);
             }
         }
+        if (isDrawBorder) {
+            //确定点击的边框
+            bigCirclePaint.setColor(Color.parseColor("#0E6DB0"));
+            smallCirclePaint.setColor(Color.parseColor("#ffffff"));
+            canvas.drawCircle(linePoints.get(mClickPosition), linePointy.get(mClickPosition), RADIUS + 3, bigCirclePaint);
+            canvas.drawCircle(linePoints.get(mClickPosition), linePointy.get(mClickPosition), RADIUS, smallCirclePaint);
+            drawMarkerViews(canvas, mClickPosition);
+        }
     }
+
+    /**
+     * 绘制markerview
+     *
+     * @param canvas
+     * @param mClickPosition
+     */
+    private void drawMarkerViews(Canvas canvas, int mClickPosition) {
+        if (mMarkerView == null || !mDrawMarkerViews) {
+            return;
+        }
+        //这里把所有的markerview都绘制上去
+        for (int i = 0; i < mData.size(); i++) {
+            if (i == mClickPosition) {
+                ChartEntity entry = mData.get(i);
+                mMarkerView.refreshContent(entry);
+                mMarkerView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+                mMarkerView.layout(0, 0, mMarkerView.getMeasuredWidth(),
+                        mMarkerView.getMeasuredHeight());
+                //画markerview
+                //需要解决 显示的时候才绘制
+                mMarkerView.draw(canvas, linePoints.get(i), linePointy.get(i) - 10);
+            }
+        }
+    }
+
     /**
      * 画Y轴上的text (1)当最大值大于1 的时候 将其分成5份 计算每个部分的高度  分成几份可以自己定
      * （2）当最大值大于0小于1的时候  也是将最大值分成5份
      * （3）当为0的时候使用默认的值
+     *
      * @param canvas
      */
     private void drawLeftYAxis(Canvas canvas) {
@@ -327,8 +432,12 @@ public class LineChart extends View {
             default:
                 return super.onTouchEvent(event);
         }
+        if (mGestureListener != null) {
+            mGestureListener.onTouchEvent(event);
+        }
         return true;
     }
+
     /**
      * 检查向左滑动的距离 确保没有画出屏幕
      */
@@ -341,13 +450,14 @@ public class LineChart extends View {
             leftMoving = maxRight - minRight;
         }
     }
+
     /**
      * 设定两个点之间的间距 和向右边滑动的时候右边的最大距离
      */
     private void getItemsWidth() {
         space = DensityUtil.dip2px(getContext(), 30);
         maxRight = (int) (xStartIndex + space * mData.size());
-        minRight = mTotalWidth - leftMargin*2;
+        minRight = mTotalWidth - leftMargin * 2;
     }
 
     public void setData(List<ChartEntity> list) {
@@ -373,7 +483,7 @@ public class LineChart extends View {
         float unScaleValue = (float) (maxValueInItems / Math.pow(10, scale));//最大值除以位数之后剩下的值  比如1200/1000 后剩下1.2
 
         maxDivisionValue = (float) (CalculateUtil.getRangeTop(unScaleValue) * Math.pow(10, scale));//获取Y轴的最大的分度值
-        xStartIndex = CalculateUtil.getDivisionTextMaxWidth(maxDivisionValue,mContext) + 20;
+        xStartIndex = CalculateUtil.getDivisionTextMaxWidth(maxDivisionValue, mContext) + 20;
     }
 
     /**
@@ -412,6 +522,123 @@ public class LineChart extends View {
                 }
             }
         }
+    }
+
+    public void setIsSmooth(boolean isSmooth) {
+        this.isSmooth = isSmooth;
+        this.invalidate();
+    }
+
+    public boolean getIsSmooth() {
+        return this.isSmooth;
+    }
+
+    /**
+     * 手势监听器
+     *
+     * @author A Shuai
+     */
+    private class RangeBarOnGestureListener implements GestureDetector.OnGestureListener {
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            int position = identifyWhichItemClick(e.getX(), e.getY());
+            if (position != INVALID_POSITION && mOnItemLineClickListener != null) {
+                mOnItemLineClickListener.onClick(position);
+                setClicked(position);
+                invalidate();
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            return false;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            return false;
+        }
+
+    }
+
+    /**
+     * 根据点击的手势位置识别是第几个点被点击
+     *
+     * @param x 手势点击的x坐标
+     * @param y 手势点击的y 坐标
+     * @return -1时表示点击的是无效位置
+     */
+    private int identifyWhichItemClick(float x, float y) {
+        float xPoint = 0;//点的x坐标
+        float yPoint = 0;//点的y坐标
+        if (mData != null) {
+            for (int i = 0; i < mData.size(); i++) {
+                xPoint = linePoints.get(i);//圆心x坐标
+                yPoint = xPoint + 10;//圆心y坐标
+                //如果点击的x、y坐标在第i个点的坐标范围内，就返回当前position
+//                if (x < xPoint - 10 ) {
+//                    //如果点击的x坐标的位置不在当前点的大致范围内。跳出
+//                    break;
+//                }
+//                if (y < yPoint - 10 ) {
+//                    break;
+//                }
+//                //如果点击的x和y的范围在以xPoint，yPoint为圆心10半径范围内区域。就返回当前position
+//                if (x >= xPoint - 10 && x <= xPoint + 10 && y >= yPoint - 10 && y <= yPoint + 10) {
+//                    return i;
+//                }
+//                if (x < (xPoint - 10)) {
+//                    break;
+//                }
+                if ((xPoint - 10) <= x && x <= yPoint) {
+                    return i;
+                }
+            }
+        }
+        return INVALID_POSITION;
+    }
+
+    /**
+     * 设置选中的位置
+     *
+     * @param position
+     */
+    public void setClicked(int position) {
+        isDrawBorder = true;
+        mClickPosition = position;
+    }
+
+    /**
+     * 设置是否话markerview
+     *
+     * @return
+     */
+    public void setIsDrawMarkerView(boolean isDrawMarker) {
+        this.mDrawMarkerViews = isDrawMarker;
+    }
+
+    /**
+     * 画markerview
+     *
+     * @param v
+     */
+    public void setMarkerView(MarkerView v) {
+        mMarkerView = v;
     }
 
     /**
