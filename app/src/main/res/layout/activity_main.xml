@@ -1,47 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.xie.marcwidget.widget.DragLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:id="@+id/drag"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
-    >
+    android:background="@drawable/bg">
+    <!--左边面板在上面-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#66ff0000"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_line_chart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:text="线型图"/>
-    <Button
-        android:id="@+id/btn_bar_chart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:text="柱型图"/>
-    <Button
-        android:id="@+id/btn_path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:text="饼状图"/>
-    <Button
-        android:id="@+id/btn_path_pie"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:text="空心的饼状图"/>
-    <Button
-        android:id="@+id/btn_scale"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="直线比例"/>
-    <Button
-        android:id="@+id/btn_hori_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="横向柱形图"/>
-</LinearLayout>
+
+    </LinearLayout>
+    <!--主面板-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#6600ff00"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btn_line_chart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="线型图" />
+
+        <Button
+            android:id="@+id/btn_bar_chart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="柱型图" />
+
+        <Button
+            android:id="@+id/btn_path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="饼状图" />
+
+        <Button
+            android:id="@+id/btn_path_pie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="空心的饼状图" />
+
+        <Button
+            android:id="@+id/btn_scale"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="直线比例" />
+
+        <Button
+            android:id="@+id/btn_hori_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="横向柱形图" />
+    </LinearLayout>
+</com.xie.marcwidget.widget.DragLayout>

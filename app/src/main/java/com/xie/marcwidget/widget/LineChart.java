@@ -104,7 +104,7 @@ public class LineChart extends View {
      */
     private List<Integer> linePointy = new ArrayList<>();
     /**
-     * 左后一次的x坐标
+     * 最后一次的x坐标
      */
     private float lastPointX;
     /**
