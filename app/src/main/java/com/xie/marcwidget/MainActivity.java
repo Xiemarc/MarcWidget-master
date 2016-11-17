@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 
@@ -13,6 +15,7 @@ import com.xie.marcwidget.activity.HoriBarActivity;
 import com.xie.marcwidget.activity.LineChartActivity;
 import com.xie.marcwidget.activity.PieChartActivity;
 import com.xie.marcwidget.activity.ScaleActivity;
+import com.xie.marcwidget.activity.ScrollViewActivity;
 import com.xie.marcwidget.utils.UIUtils;
 import com.xie.marcwidget.widget.DragLayout;
 
@@ -84,5 +87,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intent);
                 break;
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 0, 0, "上下滑动");
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == 0) {
+            startActivity(new Intent(this, ScrollViewActivity.class));
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
